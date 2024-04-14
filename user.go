@@ -96,6 +96,8 @@ type User struct {
 	createKeyDedup       string
 	skipGroupCreateDelay types.JID
 	groupJoinLock        sync.Mutex
+
+	chatSyncPreferences map[types.JID]bool
 }
 
 type resyncQueueItem struct {
@@ -273,6 +275,12 @@ func (br *WABridge) NewUser(dbUser *database.User) *User {
 	user.enqueueBackfillsTimer.Stop()
 	go user.puppetResyncLoop()
 	return user
+}
+
+func (user *User) SetChatSyncPreference(ctx context.Context, jid types.JID, sync bool) error {
+    user.chatSyncPreferences[jid] = sync
+    // Update the user to save all changes, including chat sync preferences
+    return user.Update(ctx)
 }
 
 const resyncMinInterval = 7 * 24 * time.Hour
